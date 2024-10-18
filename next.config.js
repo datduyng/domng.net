@@ -19,7 +19,7 @@ module.exports = {
     },
     {
       source: "/tools/finance/:slug*",
-      destination: "https://ai-finance-newsletter.vercel.app/tools/:slug*",
+      destination: "https://ai-finance-newsletter.vercel.app/:slug*",
     }
   ]
 };
