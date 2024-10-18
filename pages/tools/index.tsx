@@ -20,6 +20,11 @@ const tools: Tool[] = [
     name: "Universal OCR",
     description: "Extract text from images, PDFs, and more",
     link: "/tools/ocr",
+  },
+  {
+    name: "Margin Interest Calculator",
+    description: "Calculate the interest on your margin account",
+    link: "/tools/finance/margin-interest-calculator",
   }
 ]
 
@@ -64,6 +69,7 @@ const ToolsListPage: NextPage = () => {
           .filter((tool) =>
             searchQuery
               ? tool.name.toLowerCase().includes(searchQuery.toLowerCase())
+              || tool.description.toLowerCase().includes(searchQuery.toLowerCase())
               : true
           )
           .map((tool, index) => (

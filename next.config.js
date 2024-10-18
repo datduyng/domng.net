@@ -16,6 +16,10 @@ module.exports = {
     {
       source: "/tools/ocr/:slug*",
       destination: "https://universal-ocr.vercel.app/:slug*",
+    },
+    {
+      source: "/tools/finance/:slug*",
+      destination: "https://ai-finance-newsletter.vercel.app/tools/:slug*",
     }
   ]
 };
