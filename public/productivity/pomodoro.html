@@ -19,7 +19,7 @@
       }
 
       .timer-display {
-        font-size: 72px;
+        font-size: 96px; /* Increased from 72px */
         font-weight: bold;
         margin: 20px 0;
         color: #2d3436;
@@ -33,10 +33,10 @@
         background-color: #f1f3f5;
         border: 1px solid #dee2e6;
         border-radius: 20px;
-        padding: 8px 16px;
-        margin: 0 5px;
+        padding: 12px 24px; /* Increased padding */
+        margin: 0 8px; /* Increased margin */
         cursor: pointer;
-        font-size: 14px;
+        font-size: 16px; /* Increased from 14px */
         color: #495057;
         transition: all 0.2s ease;
       }
@@ -50,16 +50,17 @@
       }
 
       .control-button {
-        width: 40px;
-        height: 40px;
+        width: 60px; /* Increased from 40px */
+        height: 60px; /* Increased from 40px */
         border-radius: 50%;
         border: 1px solid #dee2e6;
         background-color: #f8f9fa;
-        margin: 0 5px;
+        margin: 0 8px; /* Increased margin */
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        font-size: 24px; /* Added for larger icons */
       }
 
       .settings {
@@ -70,6 +71,20 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        font-size: 16px; /* Increased text size */
+      }
+
+      .custom-timer {
+        margin-top: 20px;
+        display: none;
+      }
+
+      .custom-timer input {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        width: 80px;
+        margin-right: 8px;
       }
     </style>
   </head>
@@ -79,12 +94,20 @@
         <button onclick="setTimer('short')">Short Break</button>
         <button onclick="setTimer('focus')">Focus</button>
         <button onclick="setTimer('long')">Long Break</button>
+        <button onclick="toggleCustomTimer()">Custom Timer</button>
+      </div>
+
+      <div class="custom-timer" id="customTimerSection">
+        <input type="number" id="customMinutes" min="1" placeholder="Minutes" />
+        <button onclick="setCustomTimer()">Set Timer</button>
       </div>
 
       <div class="timer-display">25:00</div>
 
       <div class="controls">
-        <button class="control-button" onclick="startTimer()">▶</button>
+        <button class="control-button" id="startButton" onclick="startTimer()">
+          ▶
+        </button>
         <button class="control-button" onclick="resetTimer()">↺</button>
         <button class="control-button" onclick="toggleSettings()">⚙</button>
       </div>
@@ -96,6 +119,11 @@
         </div>
       </div>
     </div>
+
+    <audio
+      id="notificationSound"
+      src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+    ></audio>
 
     <script>
       let timeLeft = 25 * 60; // 25 minutes in seconds
@@ -118,12 +146,36 @@
             break;
         }
         updateDisplay();
+        document.getElementById("startButton").textContent = "▶";
+      }
+
+      function toggleCustomTimer() {
+        const customTimerSection =
+          document.getElementById("customTimerSection");
+        customTimerSection.style.display =
+          customTimerSection.style.display === "none" ? "block" : "none";
+      }
+
+      function setCustomTimer() {
+        const minutes = parseInt(
+          document.getElementById("customMinutes").value
+        );
+        if (minutes > 0) {
+          clearInterval(timerId);
+          currentTimerType = "custom";
+          timeLeft = minutes * 60;
+          updateDisplay();
+          document.getElementById("startButton").textContent = "▶";
+          document.getElementById("customTimerSection").style.display = "none";
+        }
       }
 
       function startTimer() {
+        const startButton = document.getElementById("startButton");
         if (timerId) {
           clearInterval(timerId);
           timerId = null;
+          startButton.textContent = "▶";
         } else {
           timerId = setInterval(() => {
             if (timeLeft > 0) {
@@ -134,8 +186,10 @@
               if (notificationsEnabled) {
                 notifyUser();
               }
+              startButton.textContent = "▶";
             }
           }, 1000);
+          startButton.textContent = "STOP";
         }
       }
 
@@ -145,6 +199,7 @@
         timeLeft = 25 * 60;
         currentTimerType = "focus";
         updateDisplay();
+        document.getElementById("startButton").textContent = "▶";
       }
 
       function updateDisplay() {
@@ -162,6 +217,10 @@
       }
 
       function notifyUser() {
+        // Play notification sound
+        const audio = document.getElementById("notificationSound");
+        audio.play();
+
         if ("Notification" in window) {
           Notification.requestPermission().then((permission) => {
             if (permission === "granted") {
@@ -177,6 +236,9 @@
                   break;
                 case "long":
                   message = "Your 15-minute long break is finished!";
+                  break;
+                case "custom":
+                  message = "Your custom timer is complete!";
                   break;
               }
 
