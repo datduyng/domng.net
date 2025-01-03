@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #ffffff;
+      }
+
+      .timer-container {
+        text-align: center;
+      }
+
+      .timer-display {
+        font-size: 72px;
+        font-weight: bold;
+        margin: 20px 0;
+        color: #2d3436;
+      }
+
+      .buttons-container {
+        margin-bottom: 20px;
+      }
+
+      button {
+        background-color: #f1f3f5;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #495057;
+        transition: all 0.2s ease;
+      }
+
+      button:hover {
+        background-color: #e9ecef;
+      }
+
+      .controls {
+        margin-top: 20px;
+      }
+
+      .control-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        margin: 0 5px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .settings {
+        margin-top: 20px;
+      }
+
+      .notification-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="timer-container">
+      <div class="buttons-container">
+        <button onclick="setTimer('short')">Short Break</button>
+        <button onclick="setTimer('focus')">Focus</button>
+        <button onclick="setTimer('long')">Long Break</button>
+      </div>
+
+      <div class="timer-display">25:00</div>
+
+      <div class="controls">
+        <button class="control-button" onclick="startTimer()">▶</button>
+        <button class="control-button" onclick="resetTimer()">↺</button>
+        <button class="control-button" onclick="toggleSettings()">⚙</button>
+      </div>
+
+      <div class="settings" style="display: none">
+        <div class="notification-toggle">
+          <input type="checkbox" id="notificationToggle" checked />
+          <label for="notificationToggle">Enable notifications</label>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let timeLeft = 25 * 60; // 25 minutes in seconds
+      let timerId = null;
+      let notificationsEnabled = true;
+      let currentTimerType = "focus";
+
+      function setTimer(type) {
+        clearInterval(timerId);
+        currentTimerType = type;
+        switch (type) {
+          case "short":
+            timeLeft = 5 * 60; // 5 minutes
+            break;
+          case "focus":
+            timeLeft = 25 * 60; // 25 minutes
+            break;
+          case "long":
+            timeLeft = 15 * 60; // 15 minutes
+            break;
+        }
+        updateDisplay();
+      }
+
+      function startTimer() {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        } else {
+          timerId = setInterval(() => {
+            if (timeLeft > 0) {
+              timeLeft--;
+              updateDisplay();
+            } else {
+              clearInterval(timerId);
+              if (notificationsEnabled) {
+                notifyUser();
+              }
+            }
+          }, 1000);
+        }
+      }
+
+      function resetTimer() {
+        clearInterval(timerId);
+        timerId = null;
+        timeLeft = 25 * 60;
+        currentTimerType = "focus";
+        updateDisplay();
+      }
+
+      function updateDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.querySelector(".timer-display").textContent = `${String(
+          minutes
+        ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function toggleSettings() {
+        const settings = document.querySelector(".settings");
+        settings.style.display =
+          settings.style.display === "none" ? "block" : "none";
+      }
+
+      function notifyUser() {
+        if ("Notification" in window) {
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              let title = "Timer Complete!";
+              let message = "";
+
+              switch (currentTimerType) {
+                case "short":
+                  message = "Your 5-minute short break is done!";
+                  break;
+                case "focus":
+                  message = "Your 25-minute focus session is complete!";
+                  break;
+                case "long":
+                  message = "Your 15-minute long break is finished!";
+                  break;
+              }
+
+              new Notification(title, {
+                body: message,
+              });
+            }
+          });
+        }
+      }
+
+      document
+        .getElementById("notificationToggle")
+        .addEventListener("change", (e) => {
+          notificationsEnabled = e.target.checked;
+        });
+    </script>
+  </body>
+</html>
