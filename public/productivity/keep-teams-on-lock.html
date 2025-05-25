@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wake Lock Demo</title>
+  <style>
+    body { font-family: monospace; padding: 2rem; }
+    button { font: inherit; padding: .5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Keep Screen Awake</h1>
+  <button id="btn">Enable Wake Lock</button>
+  <p id="status">Status: <em>inactive</em></p>
+
+  <script>
+    let wakeLock = null;
+    const btn = document.getElementById('btn');
+    const status = document.getElementById('status');
+
+    // feature‐detect
+    if (!('wakeLock' in navigator)) {
+      status.textContent = 'Wake Lock API not supported';
+      btn.disabled = true;
+    }
+
+    // request on user click
+    btn.addEventListener('click', async () => {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        status.textContent = 'Status: active';
+        btn.textContent = 'Release Wake Lock';
+      } catch (err) {
+        console.error('WakeLock request failed:', err);
+        status.textContent = `Error: ${err.name}`;
+      }
+    });
+
+    // allow release (toggle)
+    btn.addEventListener('click', async () => {
+      if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+        status.textContent = 'Status: inactive';
+        btn.textContent = 'Enable Wake Lock';
+      }
+    });
+
+    // re-acquire on visibility change
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {
+          console.error('Re-request failed:', err);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
