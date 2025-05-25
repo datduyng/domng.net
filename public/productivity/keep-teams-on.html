@@ -1,30 +1,14 @@
-<!-- User Stories & Requirements for the code below:
-
-- This is a single-page HTML web app.
-- A monospace font should be used.
-- No backend; all data is stored locally (if needed).
-- The app should be usable offline.
-
-Main user stories:
-- Prevent Microsoft Teams from marking the user as 'Away' due to inactivity.
-- Simulate user activity through periodic mouse movements and keyboard inputs.
-- Ensure the simulation runs seamlessly in the background without user intervention.
-
-Keep this comment block in the code.
-Simplify the code if possible (without removing the functionality described above).
-You MUST keep all comments in the code below, even if you think they are redundant.
-Always respond with the full new HTML file (including these comments here),
-additional explanations of what you change are nice to have but not necessary.
--->
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keep Teams Active</title>
-  <!-- Favicon: An active status indicator --> 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%2310b981'/%3E%3C/svg%3E" type="image/svg+xml">
+  <!-- Favicon: An active status indicator -->
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%2310b981'/%3E%3C/svg%3E"
+    type="image/svg+xml">
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -39,6 +23,7 @@ additional explanations of what you change are nice to have but not necessary.
     }
   </script>
 </head>
+
 <body class="bg-gray-50 min-h-screen font-mono text-gray-800">
   <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
@@ -52,13 +37,15 @@ additional explanations of what you change are nice to have but not necessary.
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-3">
           <div id="statusIndicator" class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span class="text-lg font-semibold">Status: <span id="statusText" class="text-emerald-600">Active</span></span>
+          <span class="text-lg font-semibold">Status: <span id="statusText"
+              class="text-emerald-600">Active</span></span>
         </div>
-        <button id="toggleBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+        <button id="toggleBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
           Pause
         </button>
       </div>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div class="bg-gray-50 rounded-lg p-4">
           <h3 class="font-semibold text-gray-700 mb-2">Next Event</h3>
@@ -71,72 +58,81 @@ additional explanations of what you change are nice to have but not necessary.
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <button id="settingsBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
+        <button id="settingsBtn"
+          class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
           Settings
         </button>
-        <button id="launchTeamsBtn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors">
+        <button id="launchTeamsBtn"
+          class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors">
           Launch Teams
         </button>
-<!--         <button id="newMeetingBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors">
+        <!--         <button id="newMeetingBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors">
           New Meeting
         </button> -->
       </div>
     </div>
 
     <!-- Activity Log -->
-<!--     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 class="font-semibold text-gray-700 mb-3">Activity Log</h3>
       <div id="eventLog" class="h-48 overflow-y-auto bg-gray-50 rounded-lg p-3 text-xs space-y-1">
       </div>
-    </div> -->
+    </div>
   </div>
 
   <!-- Settings Modal -->
   <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Settings</h2>
-      
+
       <!-- Event Types -->
       <div class="mb-6">
         <h3 class="font-semibold text-gray-700 mb-3">Event Types</h3>
         <div class="space-y-3">
           <label class="flex items-center">
-            <input type="checkbox" id="enableMouseMove" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableMouseMove" checked
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Mouse movements</span>
           </label>
           <label class="flex items-center">
-            <input type="checkbox" id="enableMouseClick" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableMouseClick" checked
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Mouse clicks</span>
           </label>
           <label class="flex items-center">
-            <input type="checkbox" id="enableKeyPress" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableKeyPress" checked
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Key presses</span>
           </label>
           <label class="flex items-center">
-            <input type="checkbox" id="enableScroll" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableScroll" checked
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Scrolling</span>
           </label>
         </div>
       </div>
-      
+
       <!-- Frequency -->
       <div class="mb-6">
         <label for="eventFrequency" class="block font-semibold text-gray-700 mb-2">
           Event Frequency: <span id="freqValue" class="font-normal">15s</span>
         </label>
-        <input type="range" id="eventFrequency" min="5" max="60" value="15" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+        <input type="range" id="eventFrequency" min="5" max="60" value="15"
+          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
         <div class="flex justify-between text-xs text-gray-500 mt-1">
           <span>5s</span>
           <span>60s</span>
         </div>
       </div>
-      
+
       <!-- Buttons -->
       <div class="flex justify-end space-x-3">
-        <button id="closeSettings" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors">
+        <button id="closeSettings"
+          class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors">
           Cancel
         </button>
-        <button id="saveSettings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
+        <button id="saveSettings"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
           Save
         </button>
       </div>
@@ -160,7 +156,7 @@ additional explanations of what you change are nice to have but not necessary.
       keyPress: 0,
       scroll: 0
     };
-    
+
     // Settings with defaults
     let settings = {
       enableMouseMove: true,
@@ -169,7 +165,7 @@ additional explanations of what you change are nice to have but not necessary.
       enableScroll: true,
       eventFrequency: 15
     };
-    
+
     // DOM elements
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -185,10 +181,10 @@ additional explanations of what you change are nice to have but not necessary.
     const freqValue = document.getElementById('freqValue');
     const launchTeamsBtn = document.getElementById('launchTeamsBtn');
     const newMeetingBtn = document.getElementById('newMeetingBtn');
-    
+
     // Load saved settings if available
     loadSettings();
-    
+
     // Initialize settings UI
     function updateSettingsUI() {
       document.getElementById('enableMouseMove').checked = settings.enableMouseMove;
@@ -198,16 +194,16 @@ additional explanations of what you change are nice to have but not necessary.
       freqSlider.value = settings.eventFrequency;
       freqValue.textContent = `${settings.eventFrequency}s`;
     }
-    
+
     // Load settings from localStorage
     function loadSettings() {
       const savedSettings = localStorage.getItem('keepTeamsActiveSettings');
       if (savedSettings) {
-        settings = {...settings, ...JSON.parse(savedSettings)};
+        settings = { ...settings, ...JSON.parse(savedSettings) };
       }
       updateSettingsUI();
     }
-    
+
     // Save settings to localStorage
     function saveSettingsToStorage() {
       settings.enableMouseMove = document.getElementById('enableMouseMove').checked;
@@ -215,9 +211,9 @@ additional explanations of what you change are nice to have but not necessary.
       settings.enableKeyPress = document.getElementById('enableKeyPress').checked;
       settings.enableScroll = document.getElementById('enableScroll').checked;
       settings.eventFrequency = parseInt(freqSlider.value);
-      
+
       localStorage.setItem('keepTeamsActiveSettings', JSON.stringify(settings));
-      
+
       // Restart intervals with new settings
       if (active) {
         clearAllIntervals();
@@ -235,7 +231,7 @@ additional explanations of what you change are nice to have but not necessary.
       const variance = baseTime * 0.25;
       return baseTime + (Math.random() * variance * 2 - variance);
     }
-    
+
     // Get a random position within the viewport
     function getRandomPosition() {
       return {
@@ -249,7 +245,7 @@ additional explanations of what you change are nice to have but not necessary.
       window.open('https://teams.microsoft.com/', '_blank');
       logEvent("Microsoft Teams launched in new tab");
     }
-    
+
     function createNewMeeting() {
       window.open('https://teams.microsoft.com/_#/calendarv2/createmeeting', '_blank');
       logEvent("Microsoft Teams meeting creation opened in new tab");
@@ -258,7 +254,7 @@ additional explanations of what you change are nice to have but not necessary.
     // Simulates mouse movement with random positions
     function simulateMouseMove() {
       if (!active || !settings.enableMouseMove) return;
-      
+
       const pos = getRandomPosition();
       const evt = new MouseEvent("mousemove", {
         clientX: pos.x,
@@ -268,11 +264,11 @@ additional explanations of what you change are nice to have but not necessary.
         view: window
       });
       document.dispatchEvent(evt);
-      
+
       eventCount++;
       updateEventCount();
       logEvent("Mouse movement simulated");
-      
+
       // Schedule next event with randomized timing
       if (active && settings.enableMouseMove) {
         const nextDelay = getRandomTiming();
@@ -281,14 +277,14 @@ additional explanations of what you change are nice to have but not necessary.
       } else {
         nextScheduledTimes.mouseMove = 0;
       }
-      
+
       updateNextEventTime();
     }
-    
+
     // Simulates mouse click
     function simulateMouseClick() {
       if (!active || !settings.enableMouseClick) return;
-      
+
       const pos = getRandomPosition();
       const evt = new MouseEvent("click", {
         clientX: pos.x,
@@ -298,11 +294,11 @@ additional explanations of what you change are nice to have but not necessary.
         view: window
       });
       document.dispatchEvent(evt);
-      
+
       eventCount++;
       updateEventCount();
       logEvent("Mouse click simulated");
-      
+
       // Schedule next event with randomized timing
       if (active && settings.enableMouseClick) {
         const nextDelay = getRandomTiming() * 2; // Less frequent than moves
@@ -311,29 +307,29 @@ additional explanations of what you change are nice to have but not necessary.
       } else {
         nextScheduledTimes.mouseClick = 0;
       }
-      
+
       updateNextEventTime();
     }
 
     // Simulates a key press (random keys)
     function simulateKeyPress() {
       if (!active || !settings.enableKeyPress) return;
-      
+
       // Array of safe keys to simulate
       const keys = ['Shift', 'Control', 'Alt', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
       const randomKey = keys[Math.floor(Math.random() * keys.length)];
-      
+
       const evt = new KeyboardEvent("keydown", {
         key: randomKey,
         code: randomKey + "Left",
         bubbles: true
       });
       document.dispatchEvent(evt);
-      
+
       eventCount++;
       updateEventCount();
       logEvent(`Key press (${randomKey}) simulated`);
-      
+
       // Schedule next event with randomized timing
       if (active && settings.enableKeyPress) {
         const nextDelay = getRandomTiming() * 1.5;
@@ -342,25 +338,25 @@ additional explanations of what you change are nice to have but not necessary.
       } else {
         nextScheduledTimes.keyPress = 0;
       }
-      
+
       updateNextEventTime();
     }
-    
+
     // Simulates scrolling
     function simulateScroll() {
       if (!active || !settings.enableScroll) return;
-      
+
       const scrollAmount = Math.floor(Math.random() * 100) - 50; // Random between -50 and 50
       const evt = new WheelEvent("wheel", {
         deltaY: scrollAmount,
         bubbles: true
       });
       document.dispatchEvent(evt);
-      
+
       eventCount++;
       updateEventCount();
       logEvent("Scroll event simulated");
-      
+
       // Schedule next event with randomized timing
       if (active && settings.enableScroll) {
         const nextDelay = getRandomTiming() * 2.5;
@@ -369,34 +365,35 @@ additional explanations of what you change are nice to have but not necessary.
       } else {
         nextScheduledTimes.scroll = 0;
       }
-      
+
       updateNextEventTime();
     }
-    
+
     // Update event count display
     function updateEventCount() {
       eventCountEl.textContent = eventCount.toLocaleString();
     }
-    
+
     // Log events to the UI
     function logEvent(message) {
       const timestamp = new Date().toLocaleTimeString();
       const logEntry = document.createElement('div');
       logEntry.className = 'text-gray-600 py-1 border-b border-gray-200 last:border-b-0';
       logEntry.textContent = `${timestamp}: ${message}`;
-      eventLog.prepend(logEntry);
-      
-      // Limit log entries
-      if (eventLog.children.length > 50) {
-        eventLog.removeChild(eventLog.lastChild);
-      }
+      // TODO: add this if needed
+      // eventLog.prepend(logEntry);
+
+      // // Limit log entries
+      // if (eventLog.children.length > 50) {
+      //   eventLog.removeChild(eventLog.lastChild);
+      // }
     }
-    
+
     // Update the countdown to next event
     function updateNextEventTime() {
       const now = Date.now();
       let nextTimes = [];
-      
+
       // Only include enabled and scheduled events
       if (settings.enableMouseMove && nextScheduledTimes.mouseMove > now) {
         nextTimes.push(nextScheduledTimes.mouseMove - now);
@@ -410,16 +407,16 @@ additional explanations of what you change are nice to have but not necessary.
       if (settings.enableScroll && nextScheduledTimes.scroll > now) {
         nextTimes.push(nextScheduledTimes.scroll - now);
       }
-      
+
       if (nextTimes.length === 0) {
         nextEventSpan.textContent = "No events scheduled";
         return;
       }
-      
+
       const nextEvent = Math.min(...nextTimes);
       nextEventSpan.textContent = `Next event in ${Math.ceil(nextEvent / 1000)}s`;
     }
-    
+
     // Clear all intervals and reset scheduled times
     function clearAllIntervals() {
       clearInterval(updateInterval);
@@ -430,17 +427,17 @@ additional explanations of what you change are nice to have but not necessary.
         scroll: 0
       };
     }
-    
+
     // Toggle active state
     function toggleActive() {
       active = !active;
-      
+
       if (active) {
         statusText.textContent = "Active";
         statusText.className = "text-emerald-600";
         statusIndicator.className = "w-3 h-3 bg-emerald-500 rounded-full animate-pulse";
         toggleBtn.textContent = "Pause";
-        
+
         // Restart intervals
         startIntervals();
         logEvent("Simulation activated");
@@ -449,19 +446,19 @@ additional explanations of what you change are nice to have but not necessary.
         statusText.className = "text-red-600";
         statusIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
         toggleBtn.textContent = "Resume";
-        
+
         // Clear intervals
         clearAllIntervals();
         nextEventSpan.textContent = "Simulation paused";
         logEvent("Simulation paused");
       }
     }
-    
+
     // Start all intervals
     function startIntervals() {
       // Start update interval for countdown
       updateInterval = setInterval(updateNextEventTime, 1000);
-      
+
       // Start each enabled event type with its own timing
       if (settings.enableMouseMove) {
         const delay = 1000;
@@ -483,11 +480,11 @@ additional explanations of what you change are nice to have but not necessary.
         nextScheduledTimes.scroll = Date.now() + delay;
         setTimeout(simulateScroll, delay);
       }
-      
+
       // Initial update
       updateNextEventTime();
     }
-    
+
     // Setup event listeners
     toggleBtn.addEventListener('click', toggleActive);
     settingsBtn.addEventListener('click', () => {
@@ -504,22 +501,23 @@ additional explanations of what you change are nice to have but not necessary.
     freqSlider.addEventListener('input', () => {
       freqValue.textContent = `${freqSlider.value}s`;
     });
-    
+
     // Microsoft Teams button event listeners
     launchTeamsBtn.addEventListener('click', launchTeams);
     newMeetingBtn.addEventListener('click', createNewMeeting);
-    
+
     // Close modal when clicking outside
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) {
         settingsModal.classList.add('hidden');
       }
     });
-    
+
     // Initial setup
     startIntervals();
     logEvent("Keep Teams Active application started");
     updateEventCount();
   </script>
 </body>
+
 </html>
