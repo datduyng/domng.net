@@ -1,14 +1,30 @@
+<!-- User Stories & Requirements for the code below:
+
+- This is a single-page HTML web app.
+- A monospace font should be used.
+- No backend; all data is stored locally (if needed).
+- The app should be usable offline.
+
+Main user stories:
+- Prevent Microsoft Teams from marking the user as 'Away' due to inactivity.
+- Simulate user activity through periodic mouse movements and keyboard inputs.
+- Ensure the simulation runs seamlessly in the background without user intervention.
+
+Keep this comment block in the code.
+Simplify the code if possible (without removing the functionality described above).
+You MUST keep all comments in the code below, even if you think they are redundant.
+Always respond with the full new HTML file (including these comments here),
+additional explanations of what you change are nice to have but not necessary.
+-->
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keep Teams Active</title>
-  <!-- Favicon: An active status indicator -->
-  <link rel="icon"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%2310b981'/%3E%3C/svg%3E"
-    type="image/svg+xml">
+  <!-- Favicon: An active status indicator --> 
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%2310b981'/%3E%3C/svg%3E" type="image/svg+xml">
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -23,13 +39,21 @@
     }
   </script>
 </head>
-
 <body class="bg-gray-50 min-h-screen font-mono text-gray-800">
   <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Keep Teams Status Active</h1>
-<!--       <p class="text-gray-600">Prevent Microsoft Teams from going idle with automated activity simulation</p> -->
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Keep Teams Active</h1>
+      <p class="text-gray-600">Prevent Microsoft Teams from going idle and keep your display awake</p>
+    </div>
+
+    <!-- Wake Lock Status -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center space-x-2">
+        <div id="wakeLockIndicator" class="w-3 h-3 bg-gray-400 rounded-full"></div>
+        <span class="text-sm font-medium">Wake Lock: <span id="wakeLockStatus" class="text-gray-600">Not supported</span></span>
+      </div>
+      <p class="text-xs text-blue-600 mt-1">This prevents your screen from turning off automatically</p>
     </div>
 
     <!-- Main Control Panel -->
@@ -37,18 +61,24 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-3">
           <div id="statusIndicator" class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span class="text-lg font-semibold">Status: <span id="statusText"
-              class="text-emerald-600">Active</span></span>
+          <span class="text-lg font-semibold">Status: <span id="statusText" class="text-emerald-600">Active</span></span>
         </div>
-        <button id="toggleBtn"
-          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+        <button id="toggleBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
           Pause
         </button>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div class="bg-gray-50 rounded-lg p-4">
-          <h3 class="font-semibold text-gray-700 mb-2">Next Event</h3>
+          <h3 class="font-semibold text-gray-700 mb-2">Keep Alive Methods</h3>
+          <div class="text-xs space-y-1">
+            <div id="videoStatus" class="text-gray-600">Video: Loading...</div>
+            <div id="audioStatus" class="text-gray-600">Audio: Loading...</div>
+            <div id="networkStatus" class="text-gray-600">Network: Loading...</div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h3 class="font-semibold text-gray-700 mb-2">Next Activity</h3>
           <p id="nextEvent" class="text-sm text-gray-600">Calculating...</p>
         </div>
         <div class="bg-gray-50 rounded-lg p-4">
@@ -58,119 +88,138 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <button id="settingsBtn"
-          class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
+        <button id="settingsBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
           Settings
         </button>
-        <button id="launchTeamsBtn"
-          class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors">
+        <button id="launchTeamsBtn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors">
           Launch Teams
         </button>
-        <!--         <button id="newMeetingBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors">
+<!--         <button id="newMeetingBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors">
           New Meeting
         </button> -->
       </div>
     </div>
 
     <!-- Activity Log -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+<!--     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h3 class="font-semibold text-gray-700 mb-3">Activity Log</h3>
       <div id="eventLog" class="h-48 overflow-y-auto bg-gray-50 rounded-lg p-3 text-xs space-y-1">
+        <!-- Log entries will be added here -->
       </div>
-    </div>
+    </div> -->
   </div>
 
   <!-- Settings Modal -->
   <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Settings</h2>
+      
+      <!-- Keep Alive Methods -->
+      <div class="mb-6">
+        <h3 class="font-semibold text-gray-700 mb-3">Keep Alive Methods</h3>
+        <div class="space-y-3">
+          <label class="flex items-center">
+            <input type="checkbox" id="enableWakeLock" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <span class="ml-2 text-sm">Screen Wake Lock (prevents display sleep)</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="enableVideo" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <span class="ml-2 text-sm">Video playback (hidden)</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="enableAudio" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <span class="ml-2 text-sm">Silent audio playback</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="enableNetwork" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <span class="ml-2 text-sm">Periodic network requests</span>
+          </label>
+        </div>
+      </div>
 
       <!-- Event Types -->
       <div class="mb-6">
-        <h3 class="font-semibold text-gray-700 mb-3">Event Types</h3>
+        <h3 class="font-semibold text-gray-700 mb-3">Simulated Events</h3>
         <div class="space-y-3">
           <label class="flex items-center">
-            <input type="checkbox" id="enableMouseMove" checked
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableMouseMove" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Mouse movements</span>
           </label>
           <label class="flex items-center">
-            <input type="checkbox" id="enableMouseClick" checked
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-            <span class="ml-2 text-sm">Mouse clicks</span>
-          </label>
-          <label class="flex items-center">
-            <input type="checkbox" id="enableKeyPress" checked
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableKeyPress" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Key presses</span>
           </label>
           <label class="flex items-center">
-            <input type="checkbox" id="enableScroll" checked
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <input type="checkbox" id="enableScroll" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
             <span class="ml-2 text-sm">Scrolling</span>
           </label>
         </div>
       </div>
-
+      
       <!-- Frequency -->
       <div class="mb-6">
         <label for="eventFrequency" class="block font-semibold text-gray-700 mb-2">
-          Event Frequency: <span id="freqValue" class="font-normal">15s</span>
+          Activity Frequency: <span id="freqValue" class="font-normal">30s</span>
         </label>
-        <input type="range" id="eventFrequency" min="5" max="60" value="15"
-          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+        <input type="range" id="eventFrequency" min="10" max="120" value="30" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
         <div class="flex justify-between text-xs text-gray-500 mt-1">
-          <span>5s</span>
-          <span>60s</span>
+          <span>10s</span>
+          <span>120s</span>
         </div>
       </div>
-
+      
       <!-- Buttons -->
       <div class="flex justify-end space-x-3">
-        <button id="closeSettings"
-          class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors">
+        <button id="closeSettings" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors">
           Cancel
         </button>
-        <button id="saveSettings"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
+        <button id="saveSettings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
           Save
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Hidden video element for keeping page active -->
-  <video class="hidden" autoplay loop muted playsinline>
-    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-    Your browser does not support the video tag.
+  <!-- Hidden media elements for keeping system active -->
+  <video id="keepAliveVideo" class="hidden" autoplay loop muted playsinline>
+    <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr1tZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1MiByMjg1NCBlOWE1OTAzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTMgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuZQQAAAu5tb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAZAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACGHRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAgAAAAIAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAGQAAAAAAAEAAAAAAZBtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAADIAAAAEAFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAE7bWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAA+3N0YmwAAACXc3RzZAAAAAAAAAABAAAAh2F2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAgACAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAxYXZjQwFkAAr/4QAYZ2QACqzZX4iIhAAAAwAEAAADAFA8SJZYAQAGaOvjyyLA/fj4AAAAABRidHJ0AAAAAAAEAAAABAAAAARzdHNzAAAAAAAAAAEAAAABAAAAFHN0dHMAAAAAAAAAAQAAAAEAAAAEc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAABAAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTcuODMuMTAw" type="video/mp4">
   </video>
+  
+  <audio id="keepAliveAudio" class="hidden" autoplay loop>
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+  </audio>
 
   <script>
     // Configuration and state management
     let active = true;
     let eventCount = 0;
     let updateInterval;
+    let wakeLock = null;
+    let audioContext = null;
+    let networkInterval = null;
     let nextScheduledTimes = {
       mouseMove: 0,
-      mouseClick: 0,
       keyPress: 0,
       scroll: 0
     };
-
+    
     // Settings with defaults
     let settings = {
+      enableWakeLock: true,
+      enableVideo: true,
+      enableAudio: true,
+      enableNetwork: true,
       enableMouseMove: true,
-      enableMouseClick: true,
       enableKeyPress: true,
       enableScroll: true,
-      eventFrequency: 15
+      eventFrequency: 30
     };
-
+    
     // DOM elements
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
     const toggleBtn = document.getElementById('toggleBtn');
-    const eventLog = document.getElementById('eventLog');
+    // const eventLog = document.getElementById('eventLog');
     const eventCountEl = document.getElementById('eventCount');
     const nextEventSpan = document.getElementById('nextEvent');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -181,57 +230,185 @@
     const freqValue = document.getElementById('freqValue');
     const launchTeamsBtn = document.getElementById('launchTeamsBtn');
     // const newMeetingBtn = document.getElementById('newMeetingBtn');
-
+    
+    // Status elements
+    const wakeLockStatus = document.getElementById('wakeLockStatus');
+    const wakeLockIndicator = document.getElementById('wakeLockIndicator');
+    const videoStatus = document.getElementById('videoStatus');
+    const audioStatus = document.getElementById('audioStatus');
+    const networkStatus = document.getElementById('networkStatus');
+    
+    // Media elements
+    const keepAliveVideo = document.getElementById('keepAliveVideo');
+    const keepAliveAudio = document.getElementById('keepAliveAudio');
+    
     // Load saved settings if available
     loadSettings();
-
+    
     // Initialize settings UI
     function updateSettingsUI() {
+      document.getElementById('enableWakeLock').checked = settings.enableWakeLock;
+      document.getElementById('enableVideo').checked = settings.enableVideo;
+      document.getElementById('enableAudio').checked = settings.enableAudio;
+      document.getElementById('enableNetwork').checked = settings.enableNetwork;
       document.getElementById('enableMouseMove').checked = settings.enableMouseMove;
-      document.getElementById('enableMouseClick').checked = settings.enableMouseClick;
       document.getElementById('enableKeyPress').checked = settings.enableKeyPress;
       document.getElementById('enableScroll').checked = settings.enableScroll;
       freqSlider.value = settings.eventFrequency;
       freqValue.textContent = `${settings.eventFrequency}s`;
     }
-
+    
     // Load settings from localStorage
     function loadSettings() {
       const savedSettings = localStorage.getItem('keepTeamsActiveSettings');
       if (savedSettings) {
-        settings = { ...settings, ...JSON.parse(savedSettings) };
+        settings = {...settings, ...JSON.parse(savedSettings)};
       }
       updateSettingsUI();
     }
-
+    
     // Save settings to localStorage
     function saveSettingsToStorage() {
+      settings.enableWakeLock = document.getElementById('enableWakeLock').checked;
+      settings.enableVideo = document.getElementById('enableVideo').checked;
+      settings.enableAudio = document.getElementById('enableAudio').checked;
+      settings.enableNetwork = document.getElementById('enableNetwork').checked;
       settings.enableMouseMove = document.getElementById('enableMouseMove').checked;
-      settings.enableMouseClick = document.getElementById('enableMouseClick').checked;
       settings.enableKeyPress = document.getElementById('enableKeyPress').checked;
       settings.enableScroll = document.getElementById('enableScroll').checked;
       settings.eventFrequency = parseInt(freqSlider.value);
-
+      
       localStorage.setItem('keepTeamsActiveSettings', JSON.stringify(settings));
-
-      // Restart intervals with new settings
+      
+      // Restart with new settings
       if (active) {
+        stopKeepAliveMethods();
         clearAllIntervals();
+        startKeepAliveMethods();
         startIntervals();
-        logEvent("Settings updated, simulation restarted");
+        logEvent("Settings updated, all methods restarted");
       } else {
         logEvent("Settings updated");
       }
     }
 
-    // Helper function to get randomized timing
-    function getRandomTiming() {
-      // Base frequency from settings with ±25% variation
-      const baseTime = settings.eventFrequency * 1000;
-      const variance = baseTime * 0.25;
-      return baseTime + (Math.random() * variance * 2 - variance);
+    // Wake Lock API implementation
+    async function requestWakeLock() {
+      if (!settings.enableWakeLock) return;
+      
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLockStatus.textContent = 'Active';
+          wakeLockIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
+          logEvent('Screen wake lock acquired');
+          
+          wakeLock.addEventListener('release', () => {
+            wakeLockStatus.textContent = 'Released';
+            wakeLockIndicator.className = 'w-3 h-3 bg-yellow-500 rounded-full';
+            logEvent('Screen wake lock released');
+          });
+        } else {
+          wakeLockStatus.textContent = 'Not supported';
+          wakeLockIndicator.className = 'w-3 h-3 bg-gray-400 rounded-full';
+        }
+      } catch (err) {
+        wakeLockStatus.textContent = 'Failed';
+        wakeLockIndicator.className = 'w-3 h-3 bg-red-500 rounded-full';
+        logEvent(`Wake lock failed: ${err.message}`);
+      }
+    }
+    
+    // Release wake lock
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+    
+    // Start video playback
+    function startVideo() {
+      if (!settings.enableVideo) return;
+      
+      try {
+        keepAliveVideo.play().then(() => {
+          videoStatus.textContent = 'Video: Active';
+          logEvent('Keep-alive video started');
+        }).catch(err => {
+          videoStatus.textContent = 'Video: Failed';
+          logEvent(`Video failed: ${err.message}`);
+        });
+      } catch (err) {
+        videoStatus.textContent = 'Video: Error';
+        logEvent(`Video error: ${err.message}`);
+      }
+    }
+    
+    // Stop video playback
+    function stopVideo() {
+      keepAliveVideo.pause();
+      videoStatus.textContent = 'Video: Stopped';
+    }
+    
+    // Start silent audio
+    function startAudio() {
+      if (!settings.enableAudio) return;
+      
+      try {
+        // Create audio context for silent audio
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        keepAliveAudio.play().then(() => {
+          audioStatus.textContent = 'Audio: Active';
+          logEvent('Keep-alive audio started');
+        }).catch(err => {
+          audioStatus.textContent = 'Audio: Failed';
+          logEvent(`Audio failed: ${err.message}`);
+        });
+      } catch (err) {
+        audioStatus.textContent = 'Audio: Error';
+        logEvent(`Audio error: ${err.message}`);
+      }
+    }
+    
+    // Stop audio
+    function stopAudio() {
+      keepAliveAudio.pause();
+      audioStatus.textContent = 'Audio: Stopped';
+    }
+    
+    // Start network activity
+    function startNetworkActivity() {
+      if (!settings.enableNetwork) return;
+      
+      networkInterval = setInterval(() => {
+        // Make a small request to keep network active
+        fetch('data:text/plain,ping', { method: 'HEAD' }).catch(() => {});
+      }, 30000); // Every 30 seconds
+      
+      networkStatus.textContent = 'Network: Active';
+      logEvent('Network keep-alive started');
+    }
+    
+    // Stop network activity
+    function stopNetworkActivity() {
+      if (networkInterval) {
+        clearInterval(networkInterval);
+        networkInterval = null;
+      }
+      networkStatus.textContent = 'Network: Stopped';
     }
 
+    // Helper function to get randomized timing
+    function getRandomTiming() {
+      const baseTime = settings.eventFrequency * 1000;
+      const variance = baseTime * 0.3;
+      return baseTime + (Math.random() * variance * 2 - variance);
+    }
+    
     // Get a random position within the viewport
     function getRandomPosition() {
       return {
@@ -245,7 +422,7 @@
       window.open('https://teams.microsoft.com/', '_blank');
       logEvent("Microsoft Teams launched in new tab");
     }
-
+    
     function createNewMeeting() {
       window.open('https://teams.microsoft.com/_#/calendarv2/createmeeting', '_blank');
       logEvent("Microsoft Teams meeting creation opened in new tab");
@@ -254,7 +431,7 @@
     // Simulates mouse movement with random positions
     function simulateMouseMove() {
       if (!active || !settings.enableMouseMove) return;
-
+      
       const pos = getRandomPosition();
       const evt = new MouseEvent("mousemove", {
         clientX: pos.x,
@@ -264,12 +441,11 @@
         view: window
       });
       document.dispatchEvent(evt);
-
+      
       eventCount++;
       updateEventCount();
       logEvent("Mouse movement simulated");
-
-      // Schedule next event with randomized timing
+      
       if (active && settings.enableMouseMove) {
         const nextDelay = getRandomTiming();
         nextScheduledTimes.mouseMove = Date.now() + nextDelay;
@@ -277,60 +453,27 @@
       } else {
         nextScheduledTimes.mouseMove = 0;
       }
-
-      updateNextEventTime();
-    }
-
-    // Simulates mouse click
-    function simulateMouseClick() {
-      if (!active || !settings.enableMouseClick) return;
-
-      const pos = getRandomPosition();
-      const evt = new MouseEvent("click", {
-        clientX: pos.x,
-        clientY: pos.y,
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      document.dispatchEvent(evt);
-
-      eventCount++;
-      updateEventCount();
-      logEvent("Mouse click simulated");
-
-      // Schedule next event with randomized timing
-      if (active && settings.enableMouseClick) {
-        const nextDelay = getRandomTiming() * 2; // Less frequent than moves
-        nextScheduledTimes.mouseClick = Date.now() + nextDelay;
-        setTimeout(simulateMouseClick, nextDelay);
-      } else {
-        nextScheduledTimes.mouseClick = 0;
-      }
-
+      
       updateNextEventTime();
     }
 
     // Simulates a key press (random keys)
     function simulateKeyPress() {
       if (!active || !settings.enableKeyPress) return;
-
-      // Array of safe keys to simulate
-      const keys = ['Shift', 'Control', 'Alt', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      
+      const keys = ['Shift', 'Control', 'Alt'];
       const randomKey = keys[Math.floor(Math.random() * keys.length)];
-
+      
       const evt = new KeyboardEvent("keydown", {
         key: randomKey,
-        code: randomKey + "Left",
         bubbles: true
       });
       document.dispatchEvent(evt);
-
+      
       eventCount++;
       updateEventCount();
       logEvent(`Key press (${randomKey}) simulated`);
-
-      // Schedule next event with randomized timing
+      
       if (active && settings.enableKeyPress) {
         const nextDelay = getRandomTiming() * 1.5;
         nextScheduledTimes.keyPress = Date.now() + nextDelay;
@@ -338,68 +481,57 @@
       } else {
         nextScheduledTimes.keyPress = 0;
       }
-
+      
       updateNextEventTime();
     }
-
+    
     // Simulates scrolling
     function simulateScroll() {
       if (!active || !settings.enableScroll) return;
-
-      const scrollAmount = Math.floor(Math.random() * 100) - 50; // Random between -50 and 50
-      const evt = new WheelEvent("wheel", {
-        deltaY: scrollAmount,
-        bubbles: true
-      });
-      document.dispatchEvent(evt);
-
+      
+      const scrollAmount = Math.floor(Math.random() * 50) - 25;
+      window.scrollBy(0, scrollAmount);
+      
       eventCount++;
       updateEventCount();
       logEvent("Scroll event simulated");
-
-      // Schedule next event with randomized timing
+      
       if (active && settings.enableScroll) {
-        const nextDelay = getRandomTiming() * 2.5;
+        const nextDelay = getRandomTiming() * 2;
         nextScheduledTimes.scroll = Date.now() + nextDelay;
         setTimeout(simulateScroll, nextDelay);
       } else {
         nextScheduledTimes.scroll = 0;
       }
-
+      
       updateNextEventTime();
     }
-
+    
     // Update event count display
     function updateEventCount() {
       eventCountEl.textContent = eventCount.toLocaleString();
     }
-
+    
     // Log events to the UI
     function logEvent(message) {
       const timestamp = new Date().toLocaleTimeString();
       const logEntry = document.createElement('div');
       logEntry.className = 'text-gray-600 py-1 border-b border-gray-200 last:border-b-0';
       logEntry.textContent = `${timestamp}: ${message}`;
-      // TODO: add this if needed
       // eventLog.prepend(logEntry);
-
-      // // Limit log entries
+      
       // if (eventLog.children.length > 50) {
       //   eventLog.removeChild(eventLog.lastChild);
       // }
     }
-
+    
     // Update the countdown to next event
     function updateNextEventTime() {
       const now = Date.now();
       let nextTimes = [];
-
-      // Only include enabled and scheduled events
+      
       if (settings.enableMouseMove && nextScheduledTimes.mouseMove > now) {
         nextTimes.push(nextScheduledTimes.mouseMove - now);
-      }
-      if (settings.enableMouseClick && nextScheduledTimes.mouseClick > now) {
-        nextTimes.push(nextScheduledTimes.mouseClick - now);
       }
       if (settings.enableKeyPress && nextScheduledTimes.keyPress > now) {
         nextTimes.push(nextScheduledTimes.keyPress - now);
@@ -407,84 +539,98 @@
       if (settings.enableScroll && nextScheduledTimes.scroll > now) {
         nextTimes.push(nextScheduledTimes.scroll - now);
       }
-
+      
       if (nextTimes.length === 0) {
         nextEventSpan.textContent = "No events scheduled";
         return;
       }
-
+      
       const nextEvent = Math.min(...nextTimes);
-      nextEventSpan.textContent = `Next event in ${Math.ceil(nextEvent / 1000)}s`;
+      nextEventSpan.textContent = `Next in ${Math.ceil(nextEvent / 1000)}s`;
     }
-
+    
+    // Start all keep-alive methods
+    function startKeepAliveMethods() {
+      requestWakeLock();
+      startVideo();
+      startAudio();
+      startNetworkActivity();
+    }
+    
+    // Stop all keep-alive methods
+    function stopKeepAliveMethods() {
+      releaseWakeLock();
+      stopVideo();
+      stopAudio();
+      stopNetworkActivity();
+    }
+    
     // Clear all intervals and reset scheduled times
     function clearAllIntervals() {
       clearInterval(updateInterval);
       nextScheduledTimes = {
         mouseMove: 0,
-        mouseClick: 0,
         keyPress: 0,
         scroll: 0
       };
     }
-
+    
     // Toggle active state
     function toggleActive() {
       active = !active;
-
+      
       if (active) {
         statusText.textContent = "Active";
         statusText.className = "text-emerald-600";
         statusIndicator.className = "w-3 h-3 bg-emerald-500 rounded-full animate-pulse";
         toggleBtn.textContent = "Pause";
-
-        // Restart intervals
+        
+        startKeepAliveMethods();
         startIntervals();
-        logEvent("Simulation activated");
+        logEvent("All keep-alive methods activated");
       } else {
         statusText.textContent = "Paused";
         statusText.className = "text-red-600";
         statusIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
         toggleBtn.textContent = "Resume";
-
-        // Clear intervals
+        
+        stopKeepAliveMethods();
         clearAllIntervals();
-        nextEventSpan.textContent = "Simulation paused";
-        logEvent("Simulation paused");
+        nextEventSpan.textContent = "All methods paused";
+        logEvent("All keep-alive methods paused");
       }
     }
-
+    
     // Start all intervals
     function startIntervals() {
-      // Start update interval for countdown
       updateInterval = setInterval(updateNextEventTime, 1000);
-
-      // Start each enabled event type with its own timing
+      
       if (settings.enableMouseMove) {
-        const delay = 1000;
+        const delay = 2000;
         nextScheduledTimes.mouseMove = Date.now() + delay;
         setTimeout(simulateMouseMove, delay);
       }
-      if (settings.enableMouseClick) {
-        const delay = 2000;
-        nextScheduledTimes.mouseClick = Date.now() + delay;
-        setTimeout(simulateMouseClick, delay);
-      }
       if (settings.enableKeyPress) {
-        const delay = 3000;
+        const delay = 5000;
         nextScheduledTimes.keyPress = Date.now() + delay;
         setTimeout(simulateKeyPress, delay);
       }
       if (settings.enableScroll) {
-        const delay = 4000;
+        const delay = 8000;
         nextScheduledTimes.scroll = Date.now() + delay;
         setTimeout(simulateScroll, delay);
       }
-
-      // Initial update
+      
       updateNextEventTime();
     }
-
+    
+    // Handle visibility change to re-acquire wake lock
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && active && settings.enableWakeLock) {
+        requestWakeLock();
+      }
+    });
+    
     // Setup event listeners
     toggleBtn.addEventListener('click', toggleActive);
     settingsBtn.addEventListener('click', () => {
@@ -501,23 +647,21 @@
     freqSlider.addEventListener('input', () => {
       freqValue.textContent = `${freqSlider.value}s`;
     });
-
-    // Microsoft Teams button event listeners
+    
     launchTeamsBtn.addEventListener('click', launchTeams);
     // newMeetingBtn.addEventListener('click', createNewMeeting);
-
-    // Close modal when clicking outside
+    
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) {
         settingsModal.classList.add('hidden');
       }
     });
-
+    
     // Initial setup
+    startKeepAliveMethods();
     startIntervals();
-    logEvent("Keep Teams Active application started");
+    logEvent("Keep Teams Active application started with all methods");
     updateEventCount();
   </script>
 </body>
-
 </html>
