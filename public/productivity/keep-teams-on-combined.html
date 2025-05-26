@@ -1,0 +1,982 @@
+<!-- User Stories & Requirements for the code below:
+
+- This is a single-page HTML web app.
+- A monospace font should be used.
+- No backend; all data is stored locally (if needed).
+- The app should be usable offline.
+
+Main user stories:
+- Prevent Microsoft Teams from marking the user as 'Away' due to inactivity.
+- Simulate user activity through periodic mouse movements and keyboard inputs.
+- Ensure the simulation runs seamlessly in the background without user intervention.
+- Allow users to set specific time durations or run indefinitely.
+- Timer-based interface with countdown display.
+
+Keep this comment block in the code.
+Simplify the code if possible (without removing the functionality described above).
+You MUST keep all comments in the code below, even if you think they are redundant.
+Always respond with the full new HTML file (including these comments here),
+additional explanations of what you change are nice to have but not necessary.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keep Teams Active - Timer</title>
+    <!-- Favicon: An active status indicator -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%2310b981'/%3E%3C/svg%3E"
+      type="image/svg+xml"
+    />
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ["Monaco", "Menlo", "Ubuntu Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen font-mono text-gray-800 bg-gray-50">
+    <div class="container px-4 py-8 mx-auto max-w-4xl">
+      <!-- Header -->
+      <div class="mb-8 text-center">
+        <h1 class="mb-2 text-3xl font-bold text-gray-900">
+          Keep Teams Active - Timer
+        </h1>
+        <p class="text-gray-600">
+          Prevent Microsoft Teams from going idle with timer control
+        </p>
+      </div>
+
+      <!-- Timer Control Panel -->
+      <div
+        class="p-6 mb-6 bg-white rounded-lg border border-gray-200 shadow-sm"
+      >
+        <div class="mb-6 text-center">
+          <div class="flex justify-center items-center mb-4 space-x-3">
+            <div
+              id="statusIndicator"
+              class="w-4 h-4 bg-gray-400 rounded-full"
+            ></div>
+            <span class="text-2xl font-bold"
+              >Status:
+              <span id="statusText" class="text-gray-600">Inactive</span></span
+            >
+          </div>
+
+          <!-- Timer Display -->
+          <div class="mb-6">
+            <div
+              id="timerDisplay"
+              class="mb-2 text-6xl font-bold text-blue-600"
+            >
+              00:00:00
+            </div>
+            <div id="timerLabel" class="text-sm text-gray-500">
+              Ready to start
+            </div>
+          </div>
+
+          <!-- Duration Selection -->
+          <div class="mb-6" id="durationControls">
+            <label class="block mb-3 text-sm font-medium text-gray-700"
+              >Set Duration:</label
+            >
+            <div class="flex flex-wrap gap-2 justify-center mb-4">
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="15"
+              >
+                15 min
+              </button>
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="30"
+              >
+                30 min
+              </button>
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="60"
+              >
+                1 hour
+              </button>
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="120"
+              >
+                2 hours
+              </button>
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="240"
+              >
+                4 hours
+              </button>
+              <button
+                class="px-4 py-2 text-sm bg-gray-100 rounded-lg transition-colors duration-btn hover:bg-gray-200"
+                data-minutes="-1"
+              >
+                Forever
+              </button>
+            </div>
+
+            <!-- Custom Duration -->
+            <div class="flex justify-center items-center mb-4 space-x-2">
+              <span class="text-sm text-gray-600">Custom:</span>
+              <input
+                type="number"
+                id="customHours"
+                min="0"
+                max="23"
+                value="0"
+                class="px-2 py-1 w-16 text-sm text-center rounded border"
+              />
+              <span class="text-sm text-gray-600">h</span>
+              <input
+                type="number"
+                id="customMinutes"
+                min="0"
+                max="59"
+                value="30"
+                class="px-2 py-1 w-16 text-sm text-center rounded border"
+              />
+              <span class="text-sm text-gray-600">m</span>
+              <button
+                id="setCustomBtn"
+                class="px-3 py-1 text-sm bg-blue-100 rounded transition-colors hover:bg-blue-200"
+              >
+                Set
+              </button>
+            </div>
+          </div>
+
+          <!-- Control Buttons -->
+          <div class="flex justify-center space-x-4">
+            <button
+              id="startBtn"
+              class="px-8 py-3 font-medium text-white bg-emerald-600 rounded-lg transition-colors hover:bg-emerald-700"
+            >
+              Start
+            </button>
+            <button
+              id="stopBtn"
+              class="hidden px-8 py-3 font-medium text-white bg-red-600 rounded-lg transition-colors hover:bg-red-700"
+            >
+              Stop
+            </button>
+            <button
+              id="pauseBtn"
+              class="hidden px-6 py-3 font-medium text-white bg-yellow-600 rounded-lg transition-colors hover:bg-yellow-700"
+            >
+              Pause
+            </button>
+            <button
+              id="resumeBtn"
+              class="hidden px-6 py-3 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700"
+            >
+              Resume
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Panel -->
+      <div
+        class="p-6 mb-6 bg-white rounded-lg border border-gray-200 shadow-sm"
+      >
+        <h3 class="mb-4 font-semibold text-gray-700">Keep Alive Status</h3>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <div
+                id="wakeLockIndicator"
+                class="w-3 h-3 bg-gray-400 rounded-full"
+              ></div>
+              <span class="text-sm font-medium">Screen Lock</span>
+            </div>
+            <div id="wakeLockStatus" class="mt-1 text-xs text-gray-600">
+              Inactive
+            </div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <div
+                id="videoIndicator"
+                class="w-3 h-3 bg-gray-400 rounded-full"
+              ></div>
+              <span class="text-sm font-medium">Video</span>
+            </div>
+            <div id="videoStatus" class="mt-1 text-xs text-gray-600">
+              Inactive
+            </div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <div
+                id="audioIndicator"
+                class="w-3 h-3 bg-gray-400 rounded-full"
+              ></div>
+              <span class="text-sm font-medium">Audio</span>
+            </div>
+            <div id="audioStatus" class="mt-1 text-xs text-gray-600">
+              Inactive
+            </div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <div
+                id="networkIndicator"
+                class="w-3 h-3 bg-gray-400 rounded-full"
+              ></div>
+              <span class="text-sm font-medium">Network</span>
+            </div>
+            <div id="networkStatus" class="mt-1 text-xs text-gray-600">
+              Inactive
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 text-center">
+          <div class="mb-2 text-sm text-gray-600">
+            Events Simulated: <span id="eventCount" class="font-medium">0</span>
+          </div>
+          <div class="flex flex-wrap gap-2 justify-center">
+            <button
+              id="settingsBtn"
+              class="px-4 py-2 text-sm text-white bg-gray-600 rounded-lg transition-colors hover:bg-gray-700"
+            >
+              Settings
+            </button>
+            <button
+              id="launchTeamsBtn"
+              class="px-4 py-2 text-sm text-white bg-purple-600 rounded-lg transition-colors hover:bg-purple-700"
+            >
+              Launch Teams
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div
+      id="settingsModal"
+      class="flex hidden fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50"
+    >
+      <div class="p-6 mx-4 w-full max-w-md bg-white rounded-lg shadow-xl">
+        <h2 class="mb-4 text-xl font-bold text-gray-900">Settings</h2>
+
+        <!-- Keep Alive Methods -->
+        <div class="mb-6">
+          <h3 class="mb-3 font-semibold text-gray-700">Keep Alive Methods</h3>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableWakeLock"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm"
+                >Screen Wake Lock (prevents display sleep)</span
+              >
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableVideo"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Video playback (hidden)</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableAudio"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Silent audio playback</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableNetwork"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Periodic network requests</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Event Types -->
+        <div class="mb-6">
+          <h3 class="mb-3 font-semibold text-gray-700">Simulated Events</h3>
+          <div class="space-y-3">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableMouseMove"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Mouse movements</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableKeyPress"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Key presses</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="enableScroll"
+                checked
+                class="text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm">Scrolling</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Frequency -->
+        <div class="mb-6">
+          <label
+            for="eventFrequency"
+            class="block mb-2 font-semibold text-gray-700"
+          >
+            Activity Frequency:
+            <span id="freqValue" class="font-normal">30s</span>
+          </label>
+          <input
+            type="range"
+            id="eventFrequency"
+            min="10"
+            max="120"
+            value="30"
+            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div class="flex justify-between mt-1 text-xs text-gray-500">
+            <span>10s</span>
+            <span>120s</span>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-3">
+          <button
+            id="closeSettings"
+            class="px-4 py-2 text-sm text-white bg-gray-500 rounded-lg transition-colors hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            id="saveSettings"
+            class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden media elements for keeping system active -->
+    <video id="keepAliveVideo" class="hidden" autoplay loop muted playsinline>
+      <source
+        src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr1tZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1MiByMjg1NCBlOWE1OTAzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTMgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAD2WIhAA3//728P4FNjuZQQAAAu5tb292AAAAbG12aGQAAAAAAAAAAAAAAAAAAAPoAAAAZAABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACGHRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAgAAAAIAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAAGQAAAAAAAEAAAAAAZBtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAADIAAAAEAFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAE7bWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAA+3N0YmwAAACXc3RzZAAAAAAAAAABAAAAh2F2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAgACAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAxYXZjQwFkAAr/4QAYZ2QACqzZX4iIhAAAAwAEAAADAFA8SJZYAQAGaOvjyyLA/fj4AAAAABRidHJ0AAAAAAAEAAAABAAAAARzdHNzAAAAAAAAAAEAAAABAAAAFHN0dHMAAAAAAAAAAQAAAAEAAAAEc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAABAAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTcuODMuMTAw"
+        type="video/mp4"
+      />
+    </video>
+
+    <audio id="keepAliveAudio" class="hidden" autoplay loop>
+      <source
+        src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
+        type="audio/wav"
+      />
+    </audio>
+
+    <script>
+      // Timer and state management
+      let timerActive = false;
+      let timerPaused = false;
+      let timerEndTime = null;
+      let timerInterval = null;
+      let selectedDuration = -1; // -1 = forever, otherwise minutes
+      let eventCount = 0;
+      let wakeLock = null;
+      let audioContext = null;
+      let networkInterval = null;
+      let activityTimeouts = [];
+
+      // Settings with defaults
+      let settings = {
+        enableWakeLock: true,
+        enableVideo: true,
+        enableAudio: true,
+        enableNetwork: true,
+        enableMouseMove: true,
+        enableKeyPress: true,
+        enableScroll: true,
+        eventFrequency: 30,
+      };
+
+      // DOM elements
+      const statusText = document.getElementById("statusText");
+      const statusIndicator = document.getElementById("statusIndicator");
+      const timerDisplay = document.getElementById("timerDisplay");
+      const timerLabel = document.getElementById("timerLabel");
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+      const resumeBtn = document.getElementById("resumeBtn");
+      const durationControls = document.getElementById("durationControls");
+      const eventCountEl = document.getElementById("eventCount");
+      const customHours = document.getElementById("customHours");
+      const customMinutes = document.getElementById("customMinutes");
+      const setCustomBtn = document.getElementById("setCustomBtn");
+
+      // Status elements
+      const wakeLockStatus = document.getElementById("wakeLockStatus");
+      const wakeLockIndicator = document.getElementById("wakeLockIndicator");
+      const videoStatus = document.getElementById("videoStatus");
+      const videoIndicator = document.getElementById("videoIndicator");
+      const audioStatus = document.getElementById("audioStatus");
+      const audioIndicator = document.getElementById("audioIndicator");
+      const networkStatus = document.getElementById("networkStatus");
+      const networkIndicator = document.getElementById("networkIndicator");
+
+      // Settings elements
+      const settingsModal = document.getElementById("settingsModal");
+      const settingsBtn = document.getElementById("settingsBtn");
+      const closeSettings = document.getElementById("closeSettings");
+      const saveSettings = document.getElementById("saveSettings");
+      const freqSlider = document.getElementById("eventFrequency");
+      const freqValue = document.getElementById("freqValue");
+      const launchTeamsBtn = document.getElementById("launchTeamsBtn");
+
+      // Media elements
+      const keepAliveVideo = document.getElementById("keepAliveVideo");
+      const keepAliveAudio = document.getElementById("keepAliveAudio");
+
+      // Load saved settings
+      loadSettings();
+
+      // Duration selection
+      document.querySelectorAll(".duration-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".duration-btn")
+            .forEach((b) => b.classList.remove("bg-blue-500", "text-white"));
+          btn.classList.add("bg-blue-500", "text-white");
+          selectedDuration = parseInt(btn.dataset.minutes);
+          updateTimerDisplay();
+        });
+      });
+
+      // Set default selection (30 minutes)
+      document.querySelector('[data-minutes="30"]').click();
+
+      // Custom duration
+      setCustomBtn.addEventListener("click", () => {
+        const hours = parseInt(customHours.value) || 0;
+        const minutes = parseInt(customMinutes.value) || 0;
+        const totalMinutes = hours * 60 + minutes;
+
+        if (totalMinutes > 0) {
+          document
+            .querySelectorAll(".duration-btn")
+            .forEach((b) => b.classList.remove("bg-blue-500", "text-white"));
+          selectedDuration = totalMinutes;
+          updateTimerDisplay();
+        }
+      });
+
+      // Timer display functions
+      function formatTime(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      function updateTimerDisplay() {
+        if (!timerActive) {
+          if (selectedDuration === -1) {
+            timerDisplay.textContent = "∞";
+            timerLabel.textContent = "Forever mode selected";
+          } else {
+            timerDisplay.textContent = formatTime(selectedDuration * 60);
+            timerLabel.textContent = "Duration selected";
+          }
+          return;
+        }
+
+        if (selectedDuration === -1) {
+          // Forever mode - show elapsed time
+          const elapsed = Math.floor(
+            (Date.now() - (timerEndTime - selectedDuration * 60 * 1000)) / 1000
+          );
+          timerDisplay.textContent = formatTime(elapsed);
+          timerLabel.textContent = "Elapsed time (Forever mode)";
+        } else {
+          // Countdown mode
+          const remaining = Math.max(
+            0,
+            Math.floor((timerEndTime - Date.now()) / 1000)
+          );
+          timerDisplay.textContent = formatTime(remaining);
+          timerLabel.textContent =
+            remaining > 0 ? "Time remaining" : "Time expired";
+
+          if (remaining === 0 && timerActive) {
+            stopTimer();
+          }
+        }
+      }
+
+      // Timer control functions
+      function startTimer() {
+        timerActive = true;
+        timerPaused = false;
+
+        if (selectedDuration === -1) {
+          timerEndTime = Date.now() + 365 * 24 * 60 * 60 * 1000; // Far future for forever
+        } else {
+          timerEndTime = Date.now() + selectedDuration * 60 * 1000;
+        }
+
+        timerInterval = setInterval(updateTimerDisplay, 1000);
+
+        // Update UI
+        statusText.textContent = "Active";
+        statusText.className = "text-emerald-600";
+        statusIndicator.className =
+          "w-4 h-4 bg-emerald-500 rounded-full animate-pulse";
+
+        startBtn.classList.add("hidden");
+        stopBtn.classList.remove("hidden");
+        pauseBtn.classList.remove("hidden");
+        durationControls.classList.add("hidden");
+
+        // Start keep-alive methods
+        startKeepAliveMethods();
+        updateTimerDisplay();
+      }
+
+      function stopTimer() {
+        timerActive = false;
+        timerPaused = false;
+
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        // Update UI
+        statusText.textContent = "Inactive";
+        statusText.className = "text-gray-600";
+        statusIndicator.className = "w-4 h-4 bg-gray-400 rounded-full";
+
+        startBtn.classList.remove("hidden");
+        stopBtn.classList.add("hidden");
+        pauseBtn.classList.add("hidden");
+        resumeBtn.classList.add("hidden");
+        durationControls.classList.remove("hidden");
+
+        // Stop keep-alive methods
+        stopKeepAliveMethods();
+        updateTimerDisplay();
+      }
+
+      function pauseTimer() {
+        if (!timerActive) return;
+
+        timerPaused = true;
+
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        // Update UI
+        statusText.textContent = "Paused";
+        statusText.className = "text-yellow-600";
+        statusIndicator.className = "w-4 h-4 bg-yellow-500 rounded-full";
+
+        pauseBtn.classList.add("hidden");
+        resumeBtn.classList.remove("hidden");
+
+        // Stop keep-alive methods
+        stopKeepAliveMethods();
+      }
+
+      function resumeTimer() {
+        if (!timerActive || !timerPaused) return;
+
+        timerPaused = false;
+        timerInterval = setInterval(updateTimerDisplay, 1000);
+
+        // Update UI
+        statusText.textContent = "Active";
+        statusText.className = "text-emerald-600";
+        statusIndicator.className =
+          "w-4 h-4 bg-emerald-500 rounded-full animate-pulse";
+
+        pauseBtn.classList.remove("hidden");
+        resumeBtn.classList.add("hidden");
+
+        // Start keep-alive methods
+        startKeepAliveMethods();
+        updateTimerDisplay();
+      }
+
+      // Event listeners for timer controls
+      startBtn.addEventListener("click", startTimer);
+      stopBtn.addEventListener("click", stopTimer);
+      pauseBtn.addEventListener("click", pauseTimer);
+      resumeBtn.addEventListener("click", resumeTimer);
+
+      // Settings functions
+      function loadSettings() {
+        const savedSettings = localStorage.getItem("keepTeamsActiveSettings");
+        if (savedSettings) {
+          settings = { ...settings, ...JSON.parse(savedSettings) };
+        }
+        updateSettingsUI();
+      }
+
+      function updateSettingsUI() {
+        document.getElementById("enableWakeLock").checked =
+          settings.enableWakeLock;
+        document.getElementById("enableVideo").checked = settings.enableVideo;
+        document.getElementById("enableAudio").checked = settings.enableAudio;
+        document.getElementById("enableNetwork").checked =
+          settings.enableNetwork;
+        document.getElementById("enableMouseMove").checked =
+          settings.enableMouseMove;
+        document.getElementById("enableKeyPress").checked =
+          settings.enableKeyPress;
+        document.getElementById("enableScroll").checked = settings.enableScroll;
+        freqSlider.value = settings.eventFrequency;
+        freqValue.textContent = `${settings.eventFrequency}s`;
+      }
+
+      function saveSettingsToStorage() {
+        settings.enableWakeLock =
+          document.getElementById("enableWakeLock").checked;
+        settings.enableVideo = document.getElementById("enableVideo").checked;
+        settings.enableAudio = document.getElementById("enableAudio").checked;
+        settings.enableNetwork =
+          document.getElementById("enableNetwork").checked;
+        settings.enableMouseMove =
+          document.getElementById("enableMouseMove").checked;
+        settings.enableKeyPress =
+          document.getElementById("enableKeyPress").checked;
+        settings.enableScroll = document.getElementById("enableScroll").checked;
+        settings.eventFrequency = parseInt(freqSlider.value);
+
+        localStorage.setItem(
+          "keepTeamsActiveSettings",
+          JSON.stringify(settings)
+        );
+
+        if (timerActive && !timerPaused) {
+          stopKeepAliveMethods();
+          startKeepAliveMethods();
+        }
+      }
+
+      // Wake Lock API implementation
+      async function requestWakeLock() {
+        if (!settings.enableWakeLock) return;
+
+        try {
+          if ("wakeLock" in navigator) {
+            wakeLock = await navigator.wakeLock.request("screen");
+            wakeLockStatus.textContent = "Active";
+            wakeLockIndicator.className = "w-3 h-3 bg-green-500 rounded-full";
+
+            wakeLock.addEventListener("release", () => {
+              wakeLockStatus.textContent = "Released";
+              wakeLockIndicator.className =
+                "w-3 h-3 bg-yellow-500 rounded-full";
+            });
+          } else {
+            wakeLockStatus.textContent = "Not supported";
+            wakeLockIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+          }
+        } catch (err) {
+          wakeLockStatus.textContent = "Failed";
+          wakeLockIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
+        }
+      }
+
+      function releaseWakeLock() {
+        if (wakeLock) {
+          wakeLock.release();
+          wakeLock = null;
+        }
+        wakeLockStatus.textContent = "Inactive";
+        wakeLockIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+      }
+
+      // Media keep-alive methods
+      function startVideo() {
+        if (!settings.enableVideo) return;
+
+        try {
+          keepAliveVideo
+            .play()
+            .then(() => {
+              videoStatus.textContent = "Active";
+              videoIndicator.className = "w-3 h-3 bg-green-500 rounded-full";
+            })
+            .catch((err) => {
+              videoStatus.textContent = "Failed";
+              videoIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
+            });
+        } catch (err) {
+          videoStatus.textContent = "Error";
+          videoIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
+        }
+      }
+
+      function stopVideo() {
+        keepAliveVideo.pause();
+        videoStatus.textContent = "Inactive";
+        videoIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+      }
+
+      function startAudio() {
+        if (!settings.enableAudio) return;
+
+        try {
+          if (!audioContext) {
+            audioContext = new (window.AudioContext ||
+              window.webkitAudioContext)();
+          }
+
+          keepAliveAudio
+            .play()
+            .then(() => {
+              audioStatus.textContent = "Active";
+              audioIndicator.className = "w-3 h-3 bg-green-500 rounded-full";
+            })
+            .catch((err) => {
+              audioStatus.textContent = "Failed";
+              audioIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
+            });
+        } catch (err) {
+          audioStatus.textContent = "Error";
+          audioIndicator.className = "w-3 h-3 bg-red-500 rounded-full";
+        }
+      }
+
+      function stopAudio() {
+        keepAliveAudio.pause();
+        audioStatus.textContent = "Inactive";
+        audioIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+      }
+
+      function startNetworkActivity() {
+        if (!settings.enableNetwork) return;
+
+        networkInterval = setInterval(() => {
+          fetch("data:text/plain,ping", { method: "HEAD" }).catch(() => {});
+        }, 30000);
+
+        networkStatus.textContent = "Active";
+        networkIndicator.className = "w-3 h-3 bg-green-500 rounded-full";
+      }
+
+      function stopNetworkActivity() {
+        if (networkInterval) {
+          clearInterval(networkInterval);
+          networkInterval = null;
+        }
+        networkStatus.textContent = "Inactive";
+        networkIndicator.className = "w-3 h-3 bg-gray-400 rounded-full";
+      }
+
+      // Activity simulation
+      function getRandomTiming() {
+        const baseTime = settings.eventFrequency * 1000;
+        const variance = baseTime * 0.3;
+        return baseTime + (Math.random() * variance * 2 - variance);
+      }
+
+      function getRandomPosition() {
+        return {
+          x: Math.floor(Math.random() * window.innerWidth),
+          y: Math.floor(Math.random() * window.innerHeight),
+        };
+      }
+
+      function simulateMouseMove() {
+        if (!timerActive || timerPaused || !settings.enableMouseMove) return;
+
+        const pos = getRandomPosition();
+        const evt = new MouseEvent("mousemove", {
+          clientX: pos.x,
+          clientY: pos.y,
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+        document.dispatchEvent(evt);
+
+        eventCount++;
+        updateEventCount();
+
+        if (timerActive && !timerPaused && settings.enableMouseMove) {
+          const timeout = setTimeout(simulateMouseMove, getRandomTiming());
+          activityTimeouts.push(timeout);
+        }
+      }
+
+      function simulateKeyPress() {
+        if (!timerActive || timerPaused || !settings.enableKeyPress) return;
+
+        const keys = ["Shift", "Control", "Alt"];
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+        const evt = new KeyboardEvent("keydown", {
+          key: randomKey,
+          bubbles: true,
+        });
+        document.dispatchEvent(evt);
+
+        eventCount++;
+        updateEventCount();
+
+        if (timerActive && !timerPaused && settings.enableKeyPress) {
+          const timeout = setTimeout(simulateKeyPress, getRandomTiming() * 1.5);
+          activityTimeouts.push(timeout);
+        }
+      }
+
+      function simulateScroll() {
+        if (!timerActive || timerPaused || !settings.enableScroll) return;
+
+        const scrollAmount = Math.floor(Math.random() * 50) - 25;
+        window.scrollBy(0, scrollAmount);
+
+        eventCount++;
+        updateEventCount();
+
+        if (timerActive && !timerPaused && settings.enableScroll) {
+          const timeout = setTimeout(simulateScroll, getRandomTiming() * 2);
+          activityTimeouts.push(timeout);
+        }
+      }
+
+      function updateEventCount() {
+        eventCountEl.textContent = eventCount.toLocaleString();
+      }
+
+      function startKeepAliveMethods() {
+        // Clear any existing timeouts
+        activityTimeouts.forEach(clearTimeout);
+        activityTimeouts = [];
+
+        // Start keep-alive methods
+        requestWakeLock();
+        startVideo();
+        startAudio();
+        startNetworkActivity();
+
+        // Start activity simulation
+        if (settings.enableMouseMove) {
+          const timeout = setTimeout(simulateMouseMove, 2000);
+          activityTimeouts.push(timeout);
+        }
+        if (settings.enableKeyPress) {
+          const timeout = setTimeout(simulateKeyPress, 5000);
+          activityTimeouts.push(timeout);
+        }
+        if (settings.enableScroll) {
+          const timeout = setTimeout(simulateScroll, 8000);
+          activityTimeouts.push(timeout);
+        }
+      }
+
+      function stopKeepAliveMethods() {
+        // Clear all timeouts
+        activityTimeouts.forEach(clearTimeout);
+        activityTimeouts = [];
+
+        // Stop keep-alive methods
+        releaseWakeLock();
+        stopVideo();
+        stopAudio();
+        stopNetworkActivity();
+      }
+
+      // Teams launcher
+      function launchTeams() {
+        window.open("https://teams.microsoft.com/", "_blank");
+      }
+
+      // Event listeners
+      settingsBtn.addEventListener("click", () => {
+        updateSettingsUI();
+        settingsModal.classList.remove("hidden");
+      });
+
+      closeSettings.addEventListener("click", () => {
+        settingsModal.classList.add("hidden");
+      });
+
+      saveSettings.addEventListener("click", () => {
+        saveSettingsToStorage();
+        settingsModal.classList.add("hidden");
+      });
+
+      freqSlider.addEventListener("input", () => {
+        freqValue.textContent = `${freqSlider.value}s`;
+      });
+
+      launchTeamsBtn.addEventListener("click", launchTeams);
+
+      settingsModal.addEventListener("click", (e) => {
+        if (e.target === settingsModal) {
+          settingsModal.classList.add("hidden");
+        }
+      });
+
+      // Handle visibility change to re-acquire wake lock
+      document.addEventListener("visibilitychange", () => {
+        if (
+          !document.hidden &&
+          timerActive &&
+          !timerPaused &&
+          settings.enableWakeLock
+        ) {
+          requestWakeLock();
+        }
+      });
+
+      // Initialize
+      updateTimerDisplay();
+      updateEventCount();
+    </script>
+  </body>
+</html>
